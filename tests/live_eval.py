@@ -83,10 +83,11 @@ def main():
     options = get_transcription_options(args)
 
     dataset = load_dataset(
-        "librispeech_asr",
-        "clean",
+        "speechcolab/gigaspeech",
+        "xs",  # or "s", "m", "l", "xl" for larger subsets
         split="test",
         streaming=True,
+        trust_remote_code=True,
     )
 
     total_wer = []
