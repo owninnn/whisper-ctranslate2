@@ -11,7 +11,9 @@ from typing import List
 
 # Import your Live class
 from src.whisper_ctranslate2.live import Live, BlockSize
+from src.whisper_ctranslate2.commandline import CommandLine
 from src.whisper_ctranslate2.transcribe import TranscriptionOptions, Transcribe
+from src.whisper_ctranslate2.whisper_ctranslate2 import get_transcription_options
 
 
 # -----------------------------
@@ -76,6 +78,10 @@ def stream_audio(live: LiveWER, audio: np.ndarray, sample_rate: int):
 # Main evaluation loop
 # -----------------------------
 def main():
+
+    args = CommandLine().read_command_line()
+    options = get_transcription_options(args)
+
     dataset = load_dataset(
         "librispeech_asr",
         "clean",
@@ -100,7 +106,7 @@ def main():
         threshold=0.01,
         input_device=None,
         input_device_sample_rate=16000,
-        options=None,
+        options=options,
     )
 
     for idx, sample in enumerate(dataset):
