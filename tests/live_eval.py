@@ -83,11 +83,10 @@ def main():
     options = get_transcription_options(args)
 
     dataset = load_dataset(
-        "speechcolab/gigaspeech",
-        "xs",  # or "s", "m", "l", "xl" for larger subsets
+        "facebook/voxpopuli",
+        "en",  # or other language codes
         split="test",
         streaming=True,
-        trust_remote_code=True,
     )
 
     total_wer = []
@@ -116,7 +115,7 @@ def main():
 
         audio = sample["audio"]["array"]
         sr = sample["audio"]["sampling_rate"]
-        reference = sample["text"].lower().strip()
+        reference = sample["normalized_text"].lower().strip()
 
         live.collected_text.clear()
         live.buffer = np.zeros((0, 1))
