@@ -63,12 +63,16 @@ def stream_audio(live: LiveWER, audio: np.ndarray, sample_rate: int):
         live.prevblock = block  # Update prevblock for context
         live.process()
 
-    # Flush remaining audio
+    # Send 4 seconds of silence to trigger end-of-speech detection
+    silence_duration = 4.0  # seconds
+    silence_samples = int(sample_rate * silence_duration)
+    silence = np.zeros((silence_samples, 1), dtype=audio.dtype)
 
-
-#    if len(live.buffer) > 0:
-#        live._save_to_process()
-#        live.process()
+    for i in range(0, len(silence), block_size):
+        block = silence[i : i + block_size]
+        live.callback(block, len(block), None, None)
+        live.prevblock = block
+        live.process()
 
 
 # -----------------------------
