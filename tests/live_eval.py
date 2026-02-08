@@ -11,7 +11,7 @@ from typing import List
 
 # Import your Live class
 from src.whisper_ctranslate2.live import Live, BlockSize
-from src.whisper_ctranslate2.transcribe import TranscriptionOptions
+from src.whisper_ctranslate2.transcribe import TranscriptionOptions, Transcribe
 
 
 # -----------------------------
@@ -80,26 +80,27 @@ def main():
         "librispeech_asr",
         "clean",
         split="test",
+        streaming=True,
     )
 
     total_wer = []
     max_samples = 50  # adjust for speed
 
     live = LiveWER(
-        model_path="path_to_model",
+        model_path="medium",
         cache_directory="cache",
-        local_files_only=True,
+        local_files_only=False,
         task="transcribe",
         language="en",
         threads=4,
         device="cpu",
-        device_index=None,
+        device_index=0,
         compute_type="float32",
         verbose=False,
         threshold=0.01,
         input_device=None,
         input_device_sample_rate=16000,
-        options=TranscriptionOptions(),
+        options=None,
     )
 
     for idx, sample in enumerate(dataset):
