@@ -1,6 +1,5 @@
 """
 live_wer_eval.py
-
 Evaluate live transcription WER using LibriSpeech (HF).
 """
 
@@ -27,7 +26,6 @@ class LiveWER(Live):
     def process(self):
         if len(self.buffers_to_process) > 0:
             _buffer = self.buffers_to_process.pop(0)
-
             if not self.transcribe:
                 self.transcribe = Transcribe(
                     self.model_path,
@@ -39,7 +37,6 @@ class LiveWER(Live):
                     self.local_files_only,
                     False,
                 )
-
             result = self.transcribe.inference(
                 audio=_buffer.flatten().astype("float32"),
                 task=self.task,
@@ -48,7 +45,6 @@ class LiveWER(Live):
                 live=True,
                 options=self.options,
             )
-
             text = result["text"].strip()
             if text:
                 self.collected_text.append(text)
@@ -59,26 +55,26 @@ class LiveWER(Live):
 # -----------------------------
 def stream_audio(live: LiveWER, audio: np.ndarray, sample_rate: int):
     block_size = int(sample_rate * BlockSize / 1000)
-
     for i in range(0, len(audio), block_size):
         block = audio[i : i + block_size]
         if block.ndim == 1:
             block = block[:, None]
-
         live.callback(block, len(block), None, None)
+        live.prevblock = block  # Update prevblock for context
         live.process()
 
     # Flush remaining audio
-    if len(live.buffer) > 0:
-        live._save_to_process()
-        live.process()
+
+
+#    if len(live.buffer) > 0:
+#        live._save_to_process()
+#        live.process()
 
 
 # -----------------------------
 # Main evaluation loop
 # -----------------------------
 def main():
-
     args = CommandLine().read_command_line()
     options = get_transcription_options(args)
 
@@ -117,17 +113,19 @@ def main():
         sr = sample["audio"]["sampling_rate"]
         reference = sample["normalized_text"].lower().strip()
 
+        # Reset state between samples
         live.collected_text.clear()
         live.buffer = np.zeros((0, 1))
+        live.prevblock = np.zeros((0, 1))
         live.buffers_to_process.clear()
         live.speaking = False
         live.waiting = 0
+        live.blocks_speaking = 0
 
         stream_audio(live, audio, sr)
 
         hypothesis = " ".join(live.collected_text).lower().strip()
         sample_wer = wer(reference, hypothesis)
-
         total_wer.append(sample_wer)
 
         print(f"[{idx:03d}] WER={sample_wer:.3f}")
